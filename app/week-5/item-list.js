@@ -8,73 +8,72 @@ export default function ItemList() {
   const [sortBy, setSortBy] = useState('name');
 
   useEffect(() => {
-    import('./items.json').then((data) => {
-      setItems(data.default);
-    });
+    fetch('/week-5/items.json')
+      .then(response => response.json())
+      .then(data => setItems(data));
   }, []);
 
-  const sortedItems = [...items].sort((a, b) => {
-    if (sortBy === 'name') {
-      return a.name.localeCompare(b.name);
-    } else if (sortBy === 'category') {
-      return a.category.localeCompare(b.category);
-    }
-    return 0;
-  });
-
   const groupedItems = items.reduce((acc, item) => {
-    if (!acc[item.category]) acc[item.category] = [];
-    acc[item.category].push(item);
+    const category = item.category;
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(item);
     return acc;
   }, {});
 
-  const sortedGroupedItems = Object.keys(groupedItems)
-    .sort()
-    .reduce((acc, category) => {
-      acc[category] = groupedItems[category].sort((a, b) => a.name.localeCompare(b.name));
-      return acc;
-    }, {});
+  const sortedItems = sortBy === 'group'
+    ? Object.entries(groupedItems).flatMap(([category, items]) => {
+        return items.sort((a, b) => a.name.localeCompare(b.name)).map((item, index) => ({
+          ...item,
+          groupHeader: index === 0 ? category : null
+        }));
+      })
+    : [...items].sort((a, b) => {
+        if (sortBy === 'name') {
+          return a.name.localeCompare(b.name);
+        } else if (sortBy === 'category') {
+          return a.category.localeCompare(b.category);
+        }
+        return 0;
+      });
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-lg">
-      <div className="mb-4 flex space-x-4">
+    <div className="bg-white p-6 rounded-md shadow-md">
+      <div className="flex justify-center mb-4">
         <button
           onClick={() => setSortBy('name')}
-          className={`px-4 py-2 rounded ${sortBy === 'name' ? 'bg-blue-500 text-white' : 'bg-gray-300 text-black'}`}
+          className={`px-4 py-2 mr-2 rounded-md ${
+            sortBy === 'name' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-black'
+          }`}
         >
           Sort by Name
         </button>
         <button
           onClick={() => setSortBy('category')}
-          className={`px-4 py-2 rounded ${sortBy === 'category' ? 'bg-green-500 text-white' : 'bg-gray-300 text-black'}`}
+          className={`px-4 py-2 mr-2 rounded-md ${
+            sortBy === 'category' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-black'
+          }`}
         >
           Sort by Category
         </button>
         <button
           onClick={() => setSortBy('group')}
-          className={`px-4 py-2 rounded ${sortBy === 'group' ? 'bg-purple-500 text-white' : 'bg-gray-300 text-black'}`}
+          className={`px-4 py-2 rounded-md ${
+            sortBy === 'group' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-black'
+          }`}
         >
           Group by Category
         </button>
       </div>
-      {sortBy === 'group' ? (
-        Object.keys(sortedGroupedItems).map((category) => (
-          <div key={category}>
-            <h2 className="text-xl font-bold mt-4">{category}</h2>
-            <ul>
-              {sortedGroupedItems[category].map((item) => (
-                <Item key={item.id} name={item.name} quantity={item.quantity} category={item.category} />
-              ))}
-            </ul>
-          </div>
-        ))
-      ) : (
-        <ul>
-          {sortedItems.map((item) => (
-            <Item key={item.id} name={item.name} quantity={item.quantity} category={item.category} />
-          ))}
-        </ul>
-      )}
+      <ul className="divide-y divide-gray-200">
+        {sortedItems.map((item) => (
+          <>
+            {item.groupHeader && <li className="text-lg font-bold pt-4 pb-2">{item.groupHeader}</li>}
+            <Item key={item.id} {...item} />
+          </>
+        ))}
+      </ul>
     </div>
   );
 }
