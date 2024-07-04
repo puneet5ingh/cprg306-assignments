@@ -1,5 +1,5 @@
-// app/week-8/page.js
-"use client"; // Ensure this is at the top
+
+"use client"; 
 
 import { useUserAuth } from "./_utils/auth-context";
 import { useEffect } from "react";
