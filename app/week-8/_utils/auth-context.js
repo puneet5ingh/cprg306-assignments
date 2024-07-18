@@ -1,42 +1,42 @@
-// app/week-8/_utils/auth-context.js
-"use client"; // Ensure this is at the top
-
-import { createContext, useContext, useState, useEffect } from "react";
-import { getAuth, signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
-import { auth } from './firebase'; // Adjust the path to your firebase.js file
-
+"use client";
+ 
+import { useContext, createContext, useState, useEffect } from "react";
+import {
+  signInWithPopup,
+  signOut,
+  onAuthStateChanged,
+  GithubAuthProvider,
+} from "firebase/auth";
+import { auth } from "./firebase";
+ 
 const AuthContext = createContext();
-
-export const AuthProvider = ({ children }) => {
+ 
+export const AuthContextProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUser(user);
-      } else {
-        setUser(null);
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  const gitHubSignIn = (provider) => {
+ 
+  const gitHubSignIn = () => {
+    const provider = new GithubAuthProvider();
     return signInWithPopup(auth, provider);
   };
-
+ 
   const firebaseSignOut = () => {
     return signOut(auth);
   };
-
+ 
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, [user]);
+ 
   return (
     <AuthContext.Provider value={{ user, gitHubSignIn, firebaseSignOut }}>
       {children}
     </AuthContext.Provider>
   );
 };
-
+ 
 export const useUserAuth = () => {
   return useContext(AuthContext);
 };
